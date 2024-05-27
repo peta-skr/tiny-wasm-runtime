@@ -1,7 +1,7 @@
 use crate::binary::{
     instruction::Instruction,
     module::Module,
-    types::{valueType, FuncType},
+    types::{FuncType, ValueType},
 };
 use anyhow::{bail, Result};
 
@@ -43,11 +43,11 @@ impl Store {
                 };
 
                 let Some(func_type) = func_types.get(type_idx as usize) else {
-                    bail("not found func type in type_section")
+                    bail!("not found func type in type_section")
                 };
 
                 let mut locals = Vec::with_capacity(func_body.locals.len());
-                for locals in func_body.locals.iter() {
+                for local in func_body.locals.iter() {
                     for _ in 0..local.type_count {
                         locals.push(local.value_type.clone());
                     }
