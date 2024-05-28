@@ -1,9 +1,10 @@
 use crate::binary::{
     instruction::Instruction,
     module::Module,
-    types::{FuncType, ValueType},
+    types::{Export, ExportDesc, FuncType, ValueType},
 };
-use anyhow::{bail, Result};
+use anyhow::{bail, Ok, Result};
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct Func {
@@ -22,9 +23,20 @@ pub enum FuncInst {
     Internal(InternalFuncInst),
 }
 
+pub struct ExportInst {
+    pub name: String,
+    pub desc: ExportDesc,
+}
+
+#[derive(Default)]
+pub struct ModuleInst {
+    pub exports: HashMap<String, ExportInst>,
+}
+
 #[derive(Default)]
 pub struct Store {
     pub funcs: Vec<FuncInst>,
+    pub module: ModuleInst,
 }
 
 impl Store {
@@ -63,6 +75,22 @@ impl Store {
                 funcs.push(func);
             }
         }
-        Ok(Self { funcs })
+        let mut exports = HashMap::default();
+        if let Some(ref sections) = module.export_section {
+            for export in sections {
+                let name = export.name.clone();
+                let export_inst = ExportInst {
+                    name: name.clone(),
+                    desc: export.desc.clone(),
+                };
+                exports.insert(name, export_inst);
+            }
+        };
+        let module_inst = ModuleInst { exports };
+
+        Ok(Self {
+            funcs,
+            module: module_inst,
+        })
     }
 }
